@@ -1,0 +1,45 @@
+
+def frontendProjectDir = "${rootProject.projectDir}/frontend"
+def reactFiles = project.fileTree(dir: frontendProjectDir, includes: [
+        "package.json",
+        "package-lock.json",
+        "node_modules/**"
+])
+
+repositories {
+    mavenCentral()
+}
+
+task buildReact(type: Exec) {
+    inputs.files(reactFiles)
+    outputs.dir("${frontendProjectDir}/build")
+
+    // installReact should be run prior to this task
+    dependsOn "installReact"
+    workingDir "${frontendProjectDir}"
+
+    if (System.getProperty("os.name").toUpperCase(Locale.ROOT).contains("WINDOWS")) {
+        commandLine "cmd", "/c", "npm", "run", "build"
+    } else {
+        commandLine "npm", "run", "build"
+    }
+}
+
+task installReact(type: Exec) {
+
+    inputs.files("${frontendProjectDir}/package.json")
+    outputs.dir("${frontendProjectDir}/node_modules")
+
+    workingDir "${frontendProjectDir}"
+    group = BasePlugin.BUILD_GROUP
+
+    if (System.getProperty("os.name").toUpperCase(Locale.ROOT).contains("WINDOWS")) {
+        commandLine "npm.cmd", "install"
+    } else {
+        commandLine "npm", "install"
+    }
+}
+
+task build {
+    dependsOn "buildReact"
+}
